@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Acompanhamento de Obras MV Leste / Norte | 18/05/2026 a 25/05/2026</title>
+
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+  <style>
+    :root {
+      --azul:#0555FA; --verde:#008556; --vermelho:#E61400; --laranja:#D64200;
+      --magenta:#EB0052; --petroleo:#157EA3; --bg:#F4F7FB; --card:#FFFFFF;
+      --texto:#101828; --muted:#667085; --borda:#D8E0EA; --sombra:0 16px 38px rgba(16,24,40,.12);
+      --raio:22px;
+    }
+    * { box-sizing:border-box; }
+    html { scroll-behavior:smooth; }
+    body {
+      margin:0; font-family:Arial, Helvetica, sans-serif; color:var(--texto);
+      background:radial-gradient(circle at 12% 0%, rgba(5,85,250,.14), transparent 28rem),
+                 radial-gradient(circle at 88% 8%, rgba(0,133,86,.12), transparent 28rem), var(--bg);
+    }
+    header {
+      background:linear-gradient(135deg,#0555FA 0%,#157EA3 56%,#008556 100%);
+      color:#fff; padding:30px 20px 38px; overflow:hidden; position:relative;
+    }
+    header::after { content:""; position:absolute; width:380px; height:380px; border-radius:50%; right:-150px; top:-170px; background:rgba(255,255,255,.11); }
+    .wrap { max-width:1320px; margin:0 auto; position:relative; z-index:1; }
+    .brand { display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap; margin-bottom:22px; }
+    .logo { display:flex; align-items:center; gap:12px; font-size:26px; font-weight:900; letter-spacing:-.5px; }
+    .logo-mark { width:44px; height:44px; display:grid; place-items:center; background:#fff; color:var(--azul); border-radius:14px; box-shadow:0 10px 24px rgba(0,0,0,.14); }
+    .pill { display:inline-flex; align-items:center; gap:8px; width:fit-content; padding:8px 13px; border:1px solid rgba(255,255,255,.36); border-radius:999px; background:rgba(255,255,255,.14); font-size:13px; font-weight:800; }
+    .hero { display:grid; grid-template-columns:1.35fr .65fr; gap:22px; align-items:end; }
+    h1 { margin:12px 0 10px; font-size:clamp(32px,4.6vw,58px); line-height:1.03; letter-spacing:-1.3px; }
+    .lead { max-width:960px; margin:0; font-size:18px; line-height:1.55; color:rgba(255,255,255,.92); }
+    .hero-box { background:rgba(255,255,255,.13); border:1px solid rgba(255,255,255,.30); border-radius:var(--raio); padding:18px; backdrop-filter:blur(8px); }
+    .hero-box div { display:grid; gap:5px; padding:10px 0; border-bottom:1px solid rgba(255,255,255,.22); }
+    .hero-box div:last-child { border-bottom:0; }
+    .hero-box small { color:rgba(255,255,255,.75); text-transform:uppercase; font-size:11px; font-weight:900; letter-spacing:.7px; }
+    .hero-box b { font-size:15px; }
+    main { max-width:1320px; margin:-30px auto 44px; padding:0 18px; position:relative; z-index:2; }
+    .card { background:var(--card); border:1px solid rgba(216,224,234,.88); border-radius:var(--raio); box-shadow:var(--sombra); }
+    .stats { display:grid; grid-template-columns:repeat(6,1fr); gap:14px; margin-bottom:18px; }
+    .stat { padding:18px; min-height:118px; }
+    .stat b { display:block; color:var(--azul); font-size:34px; line-height:1; }
+    .stat span { display:block; color:var(--muted); font-weight:800; font-size:13px; margin-top:7px; line-height:1.35; }
+    .stat small { display:block; color:var(--muted); margin-top:8px; line-height:1.35; }
+    .section { padding:20px; margin-bottom:18px; }
+    .section h2 { margin:0 0 8px; font-size:24px; letter-spacing:-.4px; }
+    .section p { margin:0; color:var(--muted); line-height:1.52; }
+    .filters { display:grid; grid-template-columns:1.5fr repeat(5,1fr); gap:12px; margin-top:18px; align-items:end; }
+    label { display:grid; gap:7px; color:#344054; font-size:13px; font-weight:900; }
+    input, select { width:100%; border:1px solid var(--borda); border-radius:13px; padding:12px; font-size:14px; outline:none; background:#fff; color:var(--texto); }
+    input:focus, select:focus { border-color:var(--azul); box-shadow:0 0 0 4px rgba(5,85,250,.10); }
+    .actions { display:flex; flex-wrap:wrap; gap:10px; margin-top:14px; align-items:center; }
+    button, .btn { border:0; border-radius:13px; padding:12px 15px; background:var(--azul); color:#fff; font-weight:900; cursor:pointer; text-decoration:none; display:inline-flex; justify-content:center; align-items:center; gap:8px; transition:.18s; font-size:14px; }
+    button:hover, .btn:hover { transform:translateY(-1px); filter:brightness(1.03); }
+    .btn.light { background:#EFF6FF; color:var(--azul); border:1px solid #CFE0FF; }
+    .green { background:var(--verde); }
+    .orange { background:var(--laranja); }
+    .visible-count { margin-left:auto; font-weight:900; color:var(--azul); background:#EFF6FF; padding:10px 13px; border-radius:999px; border:1px solid #CFE0FF; }
+    .dashboard { display:grid; grid-template-columns:1fr 1fr; gap:18px; margin-bottom:18px; }
+    .chart-list { display:grid; gap:12px; margin-top:16px; }
+    .bar-row { display:grid; grid-template-columns:170px 1fr 42px; gap:10px; align-items:center; font-size:13px; color:#344054; font-weight:800; }
+    .bar { height:12px; border-radius:999px; background:#E7EEF7; overflow:hidden; }
+    .bar > i { display:block; height:100%; border-radius:inherit; background:linear-gradient(90deg,var(--azul),var(--petroleo)); }
+    .map-layout { display:grid; grid-template-columns:1.15fr .85fr; gap:18px; margin-top:16px; }
+    #map, .map-embed { height:560px; border-radius:18px; border:1px solid var(--borda); background:#E7EEF7; }
+    .map-embed { width:100%; border:0; }
+    .legend { display:flex; flex-wrap:wrap; gap:8px; margin:12px 0 0; }
+    .legend span { display:inline-flex; align-items:center; gap:7px; padding:7px 10px; border-radius:999px; background:#F8FAFC; border:1px solid var(--borda); color:#344054; font-size:12px; font-weight:900; }
+    .dot { width:10px; height:10px; border-radius:50%; display:inline-block; }
+    .dot.start { background:var(--azul); } .dot.engelmig { background:var(--verde); } .dot.conecta { background:var(--laranja); } .dot.outros { background:var(--magenta); }
+    .obra-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-top:16px; }
+    .obra-card { border:1px solid var(--borda); background:#FBFDFF; border-radius:18px; padding:15px; display:grid; gap:9px; }
+    .obra-card h3 { margin:0; font-size:17px; line-height:1.25; }
+    .obra-card small { color:var(--muted); line-height:1.4; }
+    .obra-line { display:flex; justify-content:space-between; gap:10px; border-top:1px solid #EEF2F6; padding-top:8px; font-size:12px; color:#475467; }
+    .badge { display:inline-flex; padding:5px 8px; border-radius:999px; font-size:12px; font-weight:900; white-space:nowrap; }
+    .badge.exec { background:rgba(0,133,86,.12); color:var(--verde); }
+    .badge.doc { background:rgba(214,66,0,.12); color:var(--laranja); }
+    .badge.pendente { background:rgba(230,20,0,.10); color:var(--vermelho); }
+    .badge.prog { background:rgba(5,85,250,.12); color:var(--azul); }
+    .notice { margin-top:14px; border:1px solid rgba(214,66,0,.22); background:rgba(214,66,0,.08); color:#7A2E00; padding:13px; border-radius:16px; line-height:1.45; font-size:14px; }
+    .table-wrap { overflow:auto; margin-top:16px; border:1px solid var(--borda); border-radius:18px; }
+    table { border-collapse:collapse; width:100%; min-width:1450px; background:#fff; }
+    th, td { text-align:left; padding:11px 12px; border-bottom:1px solid #EEF2F6; font-size:13px; vertical-align:top; }
+    th { position:sticky; top:0; z-index:1; background:#F8FAFC; color:#344054; font-weight:900; white-space:nowrap; }
+    tr:hover td { background:#FBFDFF; }
+    footer { max-width:1320px; margin:0 auto 34px; padding:0 18px; color:var(--muted); font-size:13px; line-height:1.45; }
+    @media print { button,.btn,.actions,.map-embed { display:none; } body { background:#fff; } .card { box-shadow:none; } main { margin-top:0; } }
+    @media (max-width:1100px) { .hero,.dashboard,.map-layout,.obra-grid { grid-template-columns:1fr; } .stats { grid-template-columns:repeat(2,1fr); } .filters { grid-template-columns:repeat(2,1fr); } }
+    @media (max-width:640px) { .stats,.filters { grid-template-columns:1fr; } .visible-count { margin-left:0; width:100%; text-align:center; } #map,.map-embed { height:460px; } }
+  </style>
+</head>
+
+<body>
+  <header>
+    <div class="wrap">
+      <div class="brand">
+        <div class="logo"><span class="logo-mark">E</span> Enel</div>
+        <div class="pill">Portal de acompanhamento de obras</div>
+      </div>
+      <div class="hero">
+        <div>
+          <div class="pill">Segurança em 1º lugar. Vida em 1º lugar.</div>
+          <h1>Acompanhamento de Obras MV Leste / Norte</h1>
+          <p class="lead">
+            Site atualizado com a programação real de obras do período <strong>18/05/2026 a 25/05/2026</strong>,
+            incluindo projetos, status, tipo de intervenção, PowerON, equipamentos, horários,
+            contratadas e coordenadas para consulta rápida.
+          </p>
+        </div>
+        <aside class="hero-box">
+          <div><small>Período da programação</small><b>18/05/2026 a 25/05/2026</b></div>
+          <div><small>Técnico Enel responsável</small><b>Gilmar Campos</b></div>
+          <div><small>Coordenação</small><b>MV Leste / Norte</b></div>
+          <div><small>Base atualizada</small><b>Programação_18_25_maio_2026.xlsx</b></div>
+        </aside>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="stats">
+      <article class="card stat"><b>69</b><span>Obras / registros</span><small>Planilha carregada</small></article>
+      <article class="card stat"><b>69</b><span>Obras com coordenada</span><small>Plotáveis no mapa</small></article>
+      <article class="card stat"><b>0</b><span>Sem coordenada</span><small>Requer atualização</small></article>
+      <article class="card stat"><b>3</b><span>Parceiras executoras</span><small>Contratadas identificadas</small></article>
+      <article class="card stat"><b>4</b><span>Tipos de intervenção</span><small>Conforme programação</small></article>
+      <article class="card stat"><b>18/05/2026 a 25/05/2026</b><span>Janela operacional</span><small>18 a 25/05/2026</small></article>
+    </section>
+
+    <section class="card section">
+      <h2>Filtros de obras</h2>
+      <p>Localize rapidamente as obras por projeto, descrição, data, status, tipo de intervenção, PowerON, equipamento e contratada.</p>
+      <div class="filters">
+        <label>Buscar obra / projeto
+          <input id="q" type="search" placeholder="Projeto, descrição, PowerON, equipamento, contratada..." />
+        </label>
+        <label>Contratada
+          <select id="contratada"><option value="">Todas</option></select>
+        </label>
+        <label>Data
+          <select id="data"><option value="">Todas</option></select>
+        </label>
+        <label>Status
+          <select id="status"><option value="">Todos</option></select>
+        </label>
+        <label>Tipo intervenção
+          <select id="tipo"><option value="">Todos</option></select>
+        </label>
+        <label>Família
+          <select id="familia"><option value="">Todas</option></select>
+        </label>
+      </div>
+      <div class="actions">
+        <button onclick="limparFiltros()">Limpar filtros</button>
+        <button class="green" onclick="exportarCSV()">Exportar CSV filtrado</button>
+        <button class="orange" onclick="window.print()">Imprimir / PDF</button>
+        <a class="btn light" target="_blank" rel="noopener" href="https://www.google.com/maps/d/viewer?mid=10HwNRTu34UfYUParmwc_21swb9OrORy8&usp=sharing">Abrir My Maps</a>
+        <span class="visible-count" id="contador">69 registros visíveis</span>
+      </div>
+      <div class="notice">
+        Site atualizado com <strong>69 registros reais</strong> da planilha Programação_18_25_maio_2026.xlsx.
+        Há <strong>69</strong> obras com coordenadas válidas e <strong>0</strong> registro(s) sem localização georreferenciada.
+      </div>
+    </section>
+
+    <section class="dashboard">
+      <article class="card section"><h2>Obras por contratada</h2><div class="chart-list" id="chartContratada"></div></article>
+      <article class="card section"><h2>Obras por data</h2><div class="chart-list" id="chartData"></div></article>
+    </section>
+
+    <section class="dashboard">
+      <article class="card section"><h2>Obras por tipo de intervenção</h2><div class="chart-list" id="chartTipo"></div></article>
+      <article class="card section"><h2>Obras por status</h2><div class="chart-list" id="chartStatus"></div></article>
+    </section>
+
+    <section class="card section">
+      <h2>Mapa das obras</h2>
+      <p>Marcadores gerados a partir das coordenadas da planilha e mapa oficial do Google My Maps incorporado para consulta operacional.</p>
+      <div class="map-layout">
+        <div>
+          <div id="map"></div>
+          <div class="legend">
+            <span><i class="dot start"></i>Start Engenharia</span>
+            <span><i class="dot engelmig"></i>Engelmig</span>
+            <span><i class="dot conecta"></i>Conecta</span>
+            <span><i class="dot outros"></i>Outros</span>
+          </div>
+        </div>
+        <iframe
+          class="map-embed"
+          src="https://www.google.com/maps/d/embed?mid=10HwNRTu34UfYUParmwc_21swb9OrORy8&ehbc=2E312F"
+          loading="lazy"
+          allowfullscreen
+          referrerpolicy="no-referrer-when-downgrade">
+        </iframe>
+      </div>
+    </section>
+
+    <section class="card section">
+      <h2>Painel de acompanhamento das obras</h2>
+      <p>Cards gerados com as principais informações operacionais de cada obra filtrada.</p>
+      <div class="obra-grid" id="obraCards"></div>
+    </section>
+
+    <section class="card section">
+      <h2>Tabela completa das obras</h2>
+      <p>Base completa da programação de 18 a 25/05/2026, preservando os campos principais da planilha.</p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th><th>Projeto</th><th>Família</th><th>Descrição da Obra</th><th>Data</th>
+              <th>Status</th><th>Tipo Intervenção</th><th>PowerON</th><th>Equipamentos</th>
+              <th>Início</th><th>Fim</th><th>Contratada</th><th>Responsável</th>
+              <th>Longitude</th><th>Latitude</th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    Portal de Obras MV Leste / Norte — atualizado automaticamente a partir da planilha enviada.
+    Último acesso: <span id="acesso"></span>.
+  </footer>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    const dados = [{"id": 1, "projeto": "DMP/A.LES.22.07320", "familia": "DMP", "descricao": "Reforma de Rede Secundária", "data": "18/05/2026", "status": "Liberado para Execução", "tipo": "FI", "poweron": "16147225", "equipamentos": "353ET066002", "inicio": "09:30", "fim": "11:30", "contratada": "Engelmig (Área 11) NEC e UPS", "contratadaCurta": "Engelmig", "longitude": -46.5038967864066, "latitude": -23.5779201845423, "local": "Coordenada georreferenciada", "responsavel": "Técnico Enel Gilmar Campos", "risco": "Validar APR, sinalização, EPI/EPC, bloqueios e condições do local antes da execução.", "proxima": "Acompanhar execução, registrar evidências e atualizar status da obra."}, {"id": 2, "projeto": "DMP/A.LES.24.01910", "familia": "DMP", "descricao": "Reforma de Rede Secundaria RTRI", "data": "18/05/2026", "status": "Liberado para Execução", "tipo": "FI", "poweron": "16147201", "equipamentos": "353ET006052", "inicio": "13:00", "fim": "16:00", "contratada": "Engelmig (Área 11) NEC e UPS", "contratadaCurta": "Engelmig", "longitude": -46.5241187282574, "latitude": -23.544866607463, "local": "Coordenada georreferenciada", "responsavel": "Técnico Enel Gilmar Campos", "risco": "Validar APR, sinalização, EPI/EPC, bloqueios e condições do local antes da execução.", "proxima": "Acompanhar execução, registrar evidências e atualizar status da obra."}, {"id": 3, "projeto": "DMP/A.LES.20.06288", "familia": "DMP", "descricao": "Reforma de Rede Secundária", "data": "18/05/2026", "status": "Liberado para Execução", "tipo": "OLVR", "poweron": "Não informado", "equipamentos": "352ET092818", "inicio": "08:00", "fim": "16:00", "contratada": "Engelmig (Área 11) NEC e UPS", "contratadaCurta": "Engelmig", "longitude": -46.3787298432834, "latitude": -23.5087533358626, "local": "Coordenada georreferenciada", "responsavel": "Técnico Enel Gilmar Campos", "risco": "Validar APR, sinalização, EPI/EPC, bloqueios e condições do local antes da execução.", "proxima": "Acompanhar execução, registrar evidências e atualizar status da obra."}, {"id": 4, "projeto": "DMP/A.LES.22.07309", "familia": "DMP", "descricao": "Reforma de Rede Secundária", "data": "18/05/2026", "status": "Liberado para Execução", "tipo": "OLVR", "poweron": "Não informado", "equipamentos": "352ET162344", "inicio": "08:00", "fim": "16:00", "contratada": "Engelmig (Área 11) NEC e UPS", "contratadaCurta": "Engelmig", "longitude": -46.3813523681761, "latitude": -23.4971983262953, "local": "Coordenada georreferenciada", "responsavel": "Técnico Enel Gilmar Campos", "risco": "Validar APR, sinalização, EPI/EPC, bloqueios e condições do local antes da execução.", "proxima": "Acompanhar execução, registrar evidências e atualizar status da obra."}, {"id": 5, "projeto": "DMP/A.LES.20.06306", "familia": "DMP", "descricao": "Reforma de Rede Secundária", "data": "18/05/2026", "status": "Liberado para Execução", "tipo": "FI", "poweron": "16147175", "equipamentos": "353ET048874", "inicio": "10:00", "fim": "14:00", "contratada": "Engelmig (Área 11) NEC e UPS", "contratadaCurta": "Engelmig", "longitude": -46.5160085132652, "latitude": -23.5542835581296, "local": "Coordenada georreferenciada", "responsavel": "Técnico Enel Gilmar Campos", "risco": "Validar APR, sinalização, EPI/EPC, bloqueios e condições do local antes da execução.", "proxima": "Acompanhar execução, registrar evidências e atualizar status da obra."}, {"id": 6, "projeto": "DAC/A.LES.25.00971", "familia": "DAC", "descricao": "Ligação Nova", "data": "19/05/2026", "status": "Liberado para Execução", "tipo": "PIE", "poweron": "16173796", "equipamentos": "010ET003218", "inicio": "00:30", "fim": "04:30", "contratada": "Start Engenharia (Área 8B, 9  e 11) NEC", "contratadaCurta": "Start Engenharia", "longitude": -46.5311169548508, "latitude": -23.6701060348837, "local": "Coordenada georreferenciada", "responsavel": "Técnico Enel Gilmar Campos", "risco": "Validar APR, sinalização, EPI/EPC, bloqueios e condições do local antes da execução.", "proxima": "Acompanhar execução, registrar evidências e atualizar status da obra."}, {"id": 7, "projeto": "DMP/A.LES.25.03609", "familia": "DMP", "descricao": "Reforma de Rede Secundaria RTRI", "data": "19/05/2026", "status": "Liberado para Execução", "tipo": "FI", "poweron": "16149743", "equipamentos": "010ET029913", "inicio": "11:00", "fim": "15:00", "contratada": "Engelmig (Área 11) NEC e UPS", "contratadaCurta": "Engelmig", "longitude": -46.5190713567166, "latitude": -23.6874368455048, "local": "Coordenada georreferenciada", "responsavel": "Técnico Enel Gilmar Campos", "risco": "Validar APR, sinalização, EPI/EPC, bloqueios e condições do local antes da execução.", "proxima": "Acompanhar execução, registrar evidências e atualizar status da obra."}, {"id": 8, "projeto": "DMP/A.LES.24.04868", "familia": "DMP", "descricao": "Reforma de Rede Secundaria RTRI", "data": "19/05/2026", "status": "Liberado para Execução", "tipo": "FI", "poweron": "16150992", "equipamentos": "353ET002493", "inicio": "10:00", "fim": "14:00", "contratada": "Engelmig (Área 11) NEC e UPS", "contratadaCurta": "Engelmig", "longitude": -46.6170812643326, "latitude": -23.5237900758587, "local": "Coordenada georreferenciada", "responsavel": "Técnico Enel Gilmar Campos", "risco": "Validar APR, sinalização, EPI/EPC, bloqueios e condições do local antes da execução.", "proxima": "Acompanhar execução, registrar evidências e atualizar status da obra."}, {"id": 9, "projeto": "DMP/A.LES.24.04444", "familia": "DMP", "descricao": "Segurança Operativa", "data": "19/05/2026", "status": "Liberado para Documentação", "tipo": "FI", "poweron": "Não informado", "equipamentos": "015ET088188", "inicio": "10:00", "fim": "14:00", "contratada": "Start Engenharia (Área 8B, 9  e 11) NEC", "contratadaCurta": "Start Engenharia", "longitude": -46.4162085881562, "latitude": -23.659495152305, "local": "Coordenada georreferenciada", "responsavel": "Técnico Enel Gilmar Campos", "risco": "Validar APR, sinalização, EPI/EPC, bloqueios e condições do local antes da execução.", "proxima": "Acompanhar execução, registrar evidências e atualizar status da obra."}, {"id": 10, "projeto": "DAC/A.LES.25.01198", "familia": "DAC", "descricao": "Ligação Nova", "data": "19/05/2026", "status": "Liberado para Execução", "tipo": "FI", "poweron": "16150536", "equipamentos": "010ET087048", "inicio": "10:00", "fim": "14:00", "contratada": "Start Engenharia (Área 8B, 9  e 11) NEC", "contratadaCurta": "Start Engenharia", "longitude": -46.5318685701523, "latitude": -23.6395212794876, "local": "Coordenada georreferenciada", "responsavel": "Técnico Enel Gilmar Campos", "risco": "Validar APR, sinalização, EPI/EPC, bloqueios e condições do local antes da execução.", "proxima": "Acompanhar execução, registrar evidências e atualizar status da obra."}, {"id": 11, "projeto": "DAC/A.LES.26.00209", "familia": "DAC", "descricao": "Ligação Nova", "data": "19/05/2026", "status": "Liberado para Execução", "tipo": "BRA", "poweron": "16222689", "equipamentos": "356ET062926", "inicio": "10:00", "fim": "15:00", "contratada": "Start Engenharia (Área 8B, 9  e 11) NEC", "contratadaCurta": "Start Engenharia", "longitude": -46.4790920057643, "latitude": -23.5941272160331, "local": "Coordenada georreferenciada", "responsavel": "Técnico Enel Gilmar Campos", "risco": "Validar APR, sinalização, EPI/EPC, bloqueios e condições do local antes da execução.", "proxima": "Acompanhar execução, registrar evidências e atualizar status da obra."}, {"id": 12, "projeto": "DMP/A.LES.25.01389", "familia": "DMP", "descricao": "Reforma de Rede Secundária", "data": "19/05/2026", "status": "Liberado para Documentação", "tipo": "FI", "poweron": "Não informado", "equipamentos": "353ET024580", "inicio": "10:00", "fim": "14:00", "contratada": "Start Engenharia (Área 8B, 9  e 11) NEC", "contratadaCurta": "Start Engenharia", "longitude": -46.5145146483841, "latitude": -23.5854629107266, "local": "Coordenada georreferenciada", "responsavel": "Técnico Enel Gilmar Campos", "risco": "Validar APR, sinalização, EPI/EPC, bloqueios e condições do local antes da execução.", "proxima": "Acompanhar execução, registrar evidências e atualizar status da obra."}, {"id": 13, "projeto": "DMP/A.LES.24.02834", "familia": "DMP", "descricao": "Reforma de Rede Secundária", "data": "19/05/2026", "status": "Liberado para Documentação", "tipo": "FI", "poweron": "Não informado", "equipamentos": "356ET162798", "inicio": "10:00", "fim": "14:00", "contratada": "Start Engenharia (Área 8B, 9  e 11) NEC", "contratadaCurta": "Start Engenharia", "longitude": -46.461031741157, "latitude": -23.5691516496232, "local": "Coordenada georreferenciada", "responsavel": "Técnico Enel Gilmar Campos", "risco": "Validar APR, sinalização, EPI/EPC, bloqueios e condições do local antes da execução.", "proxima": "Acompanhar execução, registrar evidências e atualizar status da obra."}, {"id": 14, "projeto": "DMP/A.LES.24.06638", "familia": "DMP", "descricao": "Reforma de Rede Secundaria RTRI", "data": "20/05/2026", "status": "Liberado para Execução", "tipo": "FI", "poweron": "16154393", "equipamentos": "010ET032963", "inicio": "09:00", "fim": "12:00", "contratada": "Engelmig (Área 11) NEC e UPS", "contratadaCurta": "Engelmig", "longitude": -46.4944794570471, "latitude": -23.6340794543696, "local": "Coordenada georreferenciada", "responsavel": "Técnico Enel Gilmar Campos", "risco": "Validar APR, sinalização, EPI/EPC, bloqueios e condições do local antes da execução.", "proxima": "Acompanhar execução, registrar evidências e atualizar status da obra."}, {"id": 15, "projeto": "DMP/A.LES.25.01072", "familia": "DMP", "descricao": "Segurança Operativa", "data": "20/05/2026", "status": "Liberado para Execução", "tipo": "OLVR", "poweron": "Não informado", "equipamentos": "010ET013484", "inicio": "08:00", "fim": "16:30", "contratada": "Engelmig (Área 11) NEC e UPS", "contratadaCurta": "Engelmig", "longitude": -46.5028172669236, "latitude": -23.6406273396816, "local": "Coordenada georreferenciada", "responsavel": "Técnico Enel Gilmar Campos", "risco": "Validar APR, sinalização, EPI/EPC, bloqueios e condições do local antes da execução.", "proxima": "Acompanhar execução, registrar evidências e atualizar status da obra."}, {"id": 16, "projeto": "DMP/A.LES.20.06226", "familia": "DMP", "descricao": "Reforma de Rede Secundária", "data": "20/05/2026", "status": "Liberado para Execução", "tipo": "OLVR", "poweron": "Não informado", "equipamentos": "353ET026328", "inicio": "08:00", "fim": "16:30", "contratada": "Engelmig (Área 11) NEC e UPS", "contratadaCurta": "Engelmig", "longitude": -46.5243576420607, "latitude": -23.5146828565796, "local": "Coordenada georreferenciada", "responsavel": "Técnico Enel Gilmar Campos", "risco": "Validar APR, sinalização, EPI/EPC, bloqueios e condições do local antes da execução.", "proxima": "Acompanhar execução, registrar evidências e atualizar status da obra."}, {"id": 17, "projeto": "DMP/A.LES.25.04890", "familia": "DMP", "descricao": "Reforma de Rede Secundaria RTRI", "data": "20/05/2026", "status": "Liberado para Execução", "tipo": "FI", "poweron": "16154327", "equipamentos": "352ET160063", "inicio": "10:00", "fim": "14:00", "contratada": "Engelmig (Área 11) NEC e UPS", "contratadaCurta": "Engelmig", "longitude": -46.4074847133249, "latitude": -23.4859546224953, "local": "Coordenada georreferenciada", "responsavel": "Técnico Enel Gilmar Campos", "risco": "Validar APR, sinalização, EPI/EPC, bloqueios e condições do local antes da execução.", "proxima": "Acompanhar execução, registrar evidências e atualizar status da obra."}, {"id": 18, "projeto": "DAC/A.LES.25.00141", "familia": "DAC", "descricao": "Afastamento de Rede (Clientes)", "data": "20/05/2026", "status": "Liberado para Execução", "tipo": "PIE", "poweron": "16178622", "equipamentos": "020ET079008", "inicio": "10:30", "fim": "14:30", "contratada": "Start Engenharia (Área 8B, 9  e 11) NEC", "contratadaCurta": "Start Engenharia", "longitude": -46.420228956652, "latitude": -23.7076196186821, "local": "Coordenada georreferenciada", "responsavel": "Técnico Enel Gilmar Campos", "risco": "Validar APR, sinalização, EPI/EPC, bloqueios e condições do local antes da execução.", "proxima": "Acompanhar execução, registrar evidências e atualizar status da obra."}, {"id": 19, "projeto": "DAC/A.LES.25.00187", "familia": "DAC", "descricao": "Afastamento de Rede (Clientes)", "data": "20/05/2026", "status": "Liberado para Execução", "tipo": "PIE", "poweron": "16178622", "equipamentos": "020ET079008", "inicio": "10:30", "fim": "14:30", "contratada": "Start Engenharia (Área 8B, 9  e 11) NEC", "contratadaCurta": "Start Engenharia", "longitude": -46.420228956652, "latitude": -23.7076196186821, "local": "Coordenada georreferenciada", "responsavel": "Técnico Enel Gilmar Campos", "risco": "Validar APR, sinalização, EPI/EPC, bloqueios e condições do local antes da execução.", "proxima": "Acompanhar execução, registrar evidências e atualizar status da obra."}, {"id": 20, "projeto": "DAC/A.LES.25.01216", "familia": "DAC", "descricao": "Ligação Nova", "data": "20/05/2026", "status": "Liberado para Execução", "tipo": "FI", "poweron": "16155929", "equipamentos": "353ET035694", "inicio": "00:30", "fim": "04:30", "contratada": "Start Engenharia (Área 8B, 9  e 11) NEC", "contratadaCurta": "Start Engenharia", "longitude": -46.5751775399545, "latitude": -23.5322974124572, "local": "Coordenada georreferenciada", "responsavel": "Técnico Enel Gilmar Campos", "risco": "Validar APR, sinalização, EPI/EPC, bloqueios e condições do local antes da execução.", "proxima": "Acompanhar execução, registrar evidências e atualizar status da obra."}, {"id": 21, "projeto": "DAC/A.LES.25.01118", "familia": "DAC", "descricao": "Ligação Nova", "data": "20/05/2026", "status": "Liberado para Execução", "tipo": "FI", "poweron": "16156215", "equipamentos": "356ET160632", "inicio": "10:00", "fim": "14:00", "contratada": "Start Engenharia (Área 8B, 9  e 11) NEC", "contratadaCurta": "Start Engenharia", "longitude": -46.4180415542019, "latitude": -23.5665597084421, "local": "Coordenada georreferenciada", "responsavel": "Técnico Enel Gilmar Campos", "risco": "Validar APR, sinalização, EPI/EPC, bloqueios e condições do local antes da execução.", "proxima": "Acompanhar execução, registrar evidências e atualizar status da obra."}, {"id": 22, "projeto": "DAC/A.LES.26.00365", "familia": "DAC", "descricao": "Alteração de Carga", "data": "20/05/2026", "status": "Liberado para Execução", "tipo": "FI", "poweron": "16151285", "equipamentos": "010ET031801", "inicio": "10:00", "fim": "14:00", "contratada": "Start Engenharia (Área 8B, 9  e 11) NEC", "contratadaCurta": "Start Engenharia", "longitude": -46.4923644323595, "latitude": -23.6316796131303, "local": "Coordenada georreferenciada", "responsavel": "Técnico Enel Gilmar Campos", "risco": "Validar APR, sinalização, EPI/EPC, bloqueios e condições do local antes da execução.", "proxima": "Acompanhar execução, registrar evidências e atualizar status da obra."}, {"id": 23, "projeto": "DAC/A.LES.25.00325", "familia": "DAC", "descricao": "Alteração de Carga", "data": "21/05/2026", "status": "Liberado para Execução", "tipo": "FI", "poweron": "16168559", "equipamentos": "352ET031773", "inicio": "10:00", "fim": "14:00", "contratada": "Start Engenharia (Área 8B, 9  e 11) NEC", "contratadaCurta": "Start Engenharia", "longitude": -46.4079276671879, "latitude": -23.5036876061795, "local": "Coordenada georreferenciada", "responsavel": "Técnico Enel Gilmar Campos", "risco": "Validar APR, sinalização, EPI/EPC, bloqueios e condições do local antes da execução.", "proxima": "Acompanhar execução, registrar evidências e atualizar status da obra."}, {"id": 24, "projeto": "DMP/A.LES.25.03534", "familia": "DMP", "descricao": "Reforma de Rede Secundaria RTRI", "data": "21/05/2026", "status": "Liberado para Execução", "tipo": "FI", "poweron": "16168643", "equipamentos": "356BF016090", "inicio": "10:30", "fim": "14:30", "contratada": "Engelmig (Área 11) NEC e UPS", "contratadaCurta": "Engelmig", "longitude": -46.402079520733, "latitude": -23.5488854506095, "local": "Coordenada georreferenciada", "responsavel": "Técnico Enel Gilmar Campos", "risco": "Validar APR, sinalização, EPI/EPC, bloqueios e condições do local antes da execução.", "proxima": "Acompanhar execução, registrar evidências e atualizar status da obra."}, {"id": 25, "projeto": "DMP/A.LES.25.03588", "familia": "DMP", "descricao": "Reforma de Rede Secundaria RTRI", "data": "21/05/2026", "status": "Liberado para Execução", "tipo": "FI", "poweron": "16168643", "equipamentos": "356BF016090", "inicio": "10:30", "fim": "14:30", "contratada": "Engelmig (Área 11) NEC e UPS", "contratadaCurta": "Engelmig", "longitude": -46.402079520733, "latitude": -23.5488854506095, "local": "Coordenada georreferenciada", "responsavel": "Técnico Enel Gilmar Campos", "risco": "Validar APR, sinalização, EPI/EPC, bloqueios e condições do local antes da execução.", "proxima": "Acompanhar execução, registrar evidências e atualizar status da obra."}, {"id": 26, "projeto": "DAC/A.LES.25.00400", "familia": "DAC", "descricao": "Ligação Nova", "data": "21/05/2026", "status": "Liberado para Execução", "tipo": "PIE", "poweron": "16178793", "equipamentos": "353ET035533", "inicio": "10:00", "fim": "14:00", "contratada": "Conecta Obras Extras (Área 8B, 9 e 11) NEC", "contratadaCurta": "Conecta Obras Extras", "longitude": -46.4971437804487, "latitude": -23.5285481137738, "local": "Coordenada georreferenciada", "responsavel": "Técnico Enel Gilmar Campos", "risco": "Validar APR, sinalização, EPI/EPC, bloqueios e condições do local antes da execução.", "proxima": "Acompanhar execução, registrar evidências e atualizar status da obra."}, {"id": 27, "projeto": "DAC/A.LES.25.01054", "familia": "DAC", "descricao": "Migração para Média Tensão", "data": "21/05/2026", "status": "Liberado para Execução", "tipo": "FI", "poweron": "16168494", "equipamentos": "010ET229981", "inicio": "09:00", "fim": "13:00", "contratada": "Start Engenharia (Área 8B, 9  e 11) NEC", "contratadaCurta": "Start Engenharia", "longitude": -46.4960536655885, "latitude": -23.6813013830081, "local": "Coordenada georreferenciada", "responsavel": "Técnico Enel Gilmar Campos", "risco": "Validar APR, sinalização, EPI/EPC, bloqueios e condições do local antes da execução.", "proxima": "Acompanhar execução, registrar evidências e atualizar status da obra."}, {"id": 28, "projeto": "DMP/A.LES.25.01391", "familia": "DMP", "descricao": "Reforma de Rede Secundária", "data": "21/05/2026", "status": "Liberado para Execução", "tipo": "FI", "poweron": "16156361", "equipamentos": "010ET043433", "inicio": "14:00", "fim": "16:00", "contratada": "Start Engenharia (Área 8B, 9  e 11) NEC", "contratadaCurta": "Start Engenharia", "longitude": -46.4652997750799, "latitude": -23.7639107300909, "local": "Coordenada georreferenciada", "responsavel": "Técnico Enel Gilmar Campos", "risco": "Validar APR, sinalização, EPI/EPC, bloqueios e condições do local antes da execução.", "proxima": "Acompanhar execução, registrar evidências e atualizar status da obra."}, {"id": 29, "projeto": "DAC/A.LES.21.00068", "familia": "DAC", "descricao": "Regularização de Ligações Informais", "data": "21/05/2026", "status": "Liberado para Execução", "tipo": "FI", "poweron": "16156613", "equipamentos": "025ET018506", "inicio": "10:00", "fim": "14:00", "contratada": "Start Engenharia (Área 8B, 9  e 11) NEC", "contratadaCurta": "Start Engenharia", "longitude": -46.3560891940195, "latitude": -23.7364789863436, "local": "Coordenada georreferenciada", "responsavel": "Técnico Enel Gilmar Campos", "risco": "Validar APR, sinalização, EPI/EPC, bloqueios e condições do local antes da execução.", "proxima": "Acompanhar execução, registrar evidências e atualizar status da obra."}, {"id": 30, "projeto": "DMP/A.LES.25.01117", "familia": "DMP", "descricao": "Rede Compacta", "data": "21/05/2026", "status": "Liberado para Documentação", "tipo": "BRA", "poweron": "Não informado", "equipamentos": "353ET028822", "inicio": "09:00", "fim": "17:00", "contratada": "Conecta Obras Extras (Área 8B, 9 e 11) NEC", "contratadaCurta": "Conecta Obras Extras", "longitude": -46.6065840229733, "latitude": -23.5351867908264, "local": "Coordenada georreferenciada", "responsavel": "Técnico Enel Gilmar Campos", "risco": "Validar APR, sinalização, EPI/EPC, bloqueios e condições do local antes da execução.", "proxima": "Acompanhar execução, registrar evidências e atualizar status da obra."}, {"id": 31, "projeto": "DAC/A.LES.25.00623", "familia": "DAC", "descricao": "Ligação Nova", "data": "21/05/2026", "status": "Liberado para Execução", "tipo": "PIE", "poweron": "16184374", "equipamentos": "353ET000373", "inicio": "00:30", "fim": "04:30", "contratada": "Start Engenharia (Área 8B, 9  e 11) NEC", "contratadaCurta": "Start Engenharia", "longitude": -46.6246693830195, "latitude": -23.548363970493, "local": "Coordenada georreferenciada", "responsavel": "Técnico Enel Gilmar Campos", "risco": "Validar APR, sinalização, EPI/EPC, bloqueios e condições do local antes da execução.", "proxima": "Acompanhar execução, registrar evidências e atualizar status da obra."}, {"id": 32, "projeto": "DMP/A.LES.20.06275", "familia": "DMP", "descricao": "Reforma de Rede Secundária", "data": "22/05/2026", "status": "Liberado para Execução", "tipo": "OLVR", "poweron": "Não informado", "equipamentos": "356ET167243", "inicio": "08:00", "fim": "16:30", "contratada": "Engelmig (Área 11) NEC e UPS", "contratadaCurta": "Engelmig", "longitude": -46.4046215334894, "latitude": -23.5296275492767, "local": "Coordenada georreferenciada", "responsavel": "Técnico Enel Gilmar Campos", "risco": "Validar APR, sinalização, EPI/EPC, bloqueios e condições do local antes da execução.", "proxima": "Acompanhar execução, registrar evidências e atualizar status da obra."}, {"id": 33, "projeto": "DMP/A.LES.20.06278", "familia": "DMP", "descricao": "Reforma de Rede Secundária", "data": "22/05/2026", "status": "Liberado para Execução", "tipo": "OLVR", "poweron": "Não informado", "equipamentos": "352ET044952", "inicio": "08:00", "fim": "16:30", "contratada": "Engelmig (Área 11) NEC e UPS", "contratadaCurta": "Engelmig", "longitude": -46.3967114165679, "latitude": -23.5191142288321, "local": "Coordenada georreferenciada", "responsavel": "Técnico Enel Gilmar Campos", "risco": "Validar APR, sinalização, EPI/EPC, bloqueios e condições do local antes da execução.", "proxima": "Acompanhar execução, registrar evidências e atualizar status da obra."}, {"id": 34, "projeto": "DMP/A.LES.20.06284", "familia": "DMP", "descricao": "Reforma de Rede Secundária", "data": "22/05/2026", "status": "Liberado para Execução", "tipo": "OLVR", "poweron": "Não informado", "equipamentos": "352ET160359", "inicio": "08:00", "fim": "16:30", "contratada": "Engelmig (Área 11) NEC e UPS", "contratadaCurta": "Engelmig", "longitude": -46.3822047093867, "latitude": -23.5161009033347, "local": "Coordenada georreferenciada", "responsavel": "Técnico Enel Gilmar Campos", "risco": "Validar APR, sinalização, EPI/EPC, bloqueios e condições do local antes da execução.", "proxima": "Acompanhar execução, registrar evidências e atualizar status da obra."}, {"id": 35, "projeto": "DMP/A.LES.25.04117", "familia": "DMP", "descricao": "Segurança Operativa", "data": "22/05/2026", "status": "Liberado para Execução", "tipo": "FI", "poweron": "16169104", "equipamentos": "353ET055107", "inicio": "10:00", "fim": "14:00", "contratada": "Start Engenharia (Área 8B, 9  e 11) NEC", "contratadaCurta": "Start Engenharia", "longitude": -46.4991234803145, "latitude": -23.5531896537782, "local": "Coordenada georreferenciada", "responsavel": "Técnico Enel Gilmar Campos", "risco": "Validar APR, sinalização, EPI/EPC, bloqueios e condições do local antes da execução.", "proxima": "Acompanhar execução, registrar evidências e atualizar status da obra."}, {"id": 36, "projeto": "DMP/A.LES.25.01123", "familia": "DMP", "descricao": "Reforma de Rede Secundaria RTRI", "data": "22/05/2026", "status": "Liberado para Execução", "tipo": "FI", "poweron": "16168996", "equipamentos": "356ET051803", "inicio": "10:00", "fim": "14:00", "contratada": "Engelmig (Área 11) NEC e UPS", "contratadaCurta": "Engelmig", "longitude": -46.4233238941726, "latitude": -23.5942349369897, "local": "Coordenada georreferenciada", "responsavel": "Técnico Enel Gilmar Campos", "risco": "Validar APR, sinalização, EPI/EPC, bloqueios e condições do local antes da execução.", "proxima": "Acompanhar execução, registrar evidências e atualizar status da obra."}, {"id": 37, "projeto": "DMP/A.LES.21.28270", "familia": "DMP", "descricao": "Reforma de Rede Secundária", "data": "22/05/2026", "status": "Liberado para Execução", "tipo": "FI", "poweron": "16170441", "equipamentos": "352ET160883", "inicio": "10:00", "fim": "13:00", "contratada": "Engelmig (Área 11) NEC e UPS", "contratadaCurta": "Engelmig", "longitude": -46.3793526930931, "latitude": -23.4801919935747, "local": "Coordenada georreferenciada", "responsavel": "Técnico Enel Gilmar Campos", "risco": "Validar APR, sinalização, EPI/EPC, bloqueios e condições do local antes da execução.", "proxima": "Acompanhar execução, registrar evidências e atualizar status da obra."}, {"id": 38, "projeto": "DMP/A.LES.24.04418", "familia": "DMP", "descricao": "Segurança Operativa", "data": "22/05/2026", "status": "Liberado para Execução", "tipo": "PIE", "poweron": "16156483", "equipamentos": "015ET004710", "inicio": "00:30", "fim": "04:30", "contratada": "Start Engenharia (Área 8B, 9  e 11) NEC", "contratadaCurta": "Start Engenharia", "longitude": -46.4479925254866, "latitude": -23.6658673621134, "local": "Coordenada georreferenciada", "responsavel": "Técnico Enel Gilmar Campos", "risco": "Validar APR, sinalização, EPI/EPC, bloqueios e condições do local antes da execução.", "proxima": "Acompanhar execução, registrar evidências e atualizar status da obra."}, {"id": 39, "projeto": "DMP/A.SUL.25.09620", "familia": "DMP", "descricao": "Progr. Substituição de Postes de Madeira", "data": "22/05/2026", "status": "Liberado para Execução", "tipo": "FI", "poweron": "16178501 ( SINERGIA )", "equipamentos": "010ET061542", "inicio": "10:00", "fim": "14:00", "contratada": "Start Engenharia (Área 8B, 9  e 11) NEC", "contratadaCurta": "Start Engenharia", "longitude": -46.4759207416922, "latitude": -23.7306321882557, "local": "Coordenada georreferenciada", "responsavel": "Técnico Enel Gilmar Campos", "risco": "Validar APR, sinalização, EPI/EPC, bloqueios e condições do local antes da execução.", "proxima": "Acompanhar execução, registrar evidências e atualizar status da obra."}, {"id": 40, "projeto": "DMP/A.SUL.25.09623", "familia": "DMP", "descricao": "Progr. Substituição de Postes de Madeira", "data": "22/05/2026", "status": "Liberado para Execução", "tipo": "FI", "poweron": "16178501 ( SINERGIA )", "equipamentos": "010ET088553", "inicio": "10:00", "fim": "14:00", "contratada": "Start Engenharia (Área 8B, 9  e 11) NEC", "contratadaCurta": "Start Engenharia", "longitude": -46.4795574615507, "latitude": -23.7344323440336, "local": "Coordenada georreferenciada", "responsavel": "Técnico Enel Gilmar Campos", "risco": "Validar APR, sinalização, EPI/EPC, bloqueios e condições do local antes da execução.", "proxima": "Acompanhar execução, registrar evidências e atualizar status da obra."}, {"id": 41, "projeto": "DMP/A.SUL.25.09615", "familia": "DMP", "descricao": "Progr. Substituição de Postes de Madeira", "data": "22/05/2026", "status": "Liberado para Execução", "tipo": "FI", "poweron": "16178501 ( SINERGIA )", "equipamentos": "010ET220652", "inicio": "10:00", "fim": "14:00", "contratada": "Start Engenharia (Área 8B, 9  e 11) NEC", "contratadaCurta": "Start Engenharia", "longitude": -46.4768643879659, "latitude": -23.7325466868263, "local": "Coordenada georreferenciada", "responsavel": "Técnico Enel Gilmar Campos", "risco": "Validar APR, sinalização, EPI/EPC, bloqueios e condições do local antes da execução.", "proxima": "Acompanhar execução, registrar evidências e atualizar status da obra."}, {"id": 42, "projeto": "DMP/A.SUL.25.09605", "familia": "DMP", "descricao": "Progr. Substituição de Postes de Madeira", "data": "22/05/2026", "status": "Liberado para Execução", "tipo": "FI", "poweron": "16178501 ( SINERGIA )", "equipamentos": "010ET080985", "inicio": "10:00", "fim": "14:00", "contratada": "Start Engenharia (Área 8B, 9  e 11) NEC", "contratadaCurta": "Start Engenharia", "longitude": -46.4735347432797, "latitude": -23.7374007798088, "local": "Coordenada georreferenciada", "responsavel": "Técnico Enel Gilmar Campos", "risco": "Validar APR, sinalização, EPI/EPC, bloqueios e condições do local antes da execução.", "proxima": "Acompanhar execução, registrar evidências e atualizar status da obra."}, {"id": 43, "projeto": "DAC/A.LES.25.01113", "familia": "DAC", "descricao": "Ligação Nova", "data": "23/05/2026", "status": "Liberado para Execução", "tipo": "FI", "poweron": "16170549", "equipamentos": "356ET161913", "inicio": "10:00", "fim": "14:00", "contratada": "Start Engenharia (Área 8B, 9  e 11) NEC", "contratadaCurta": "Start Engenharia", "longitude": -46.4839913097279, "latitude": -23.6199697977668, "local": "Coordenada georreferenciada", "responsavel": "Técnico Enel Gilmar Campos", "risco": "Validar APR, sinalização, EPI/EPC, bloqueios e condições do local antes da execução.", "proxima": "Acompanhar execução, registrar evidências e atualizar status da obra."}, {"id": 44, "projeto": "DAC/A.LES.26.00162", "familia": "DAC", "descricao": "Ligação Nova", "data": "23/05/2026", "status": "Liberado para Execução", "tipo": "FI", "poweron": "16169294", "equipamentos": "010ET006331", "inicio": "10:00", "fim": "14:00", "contratada": "Start Engenharia (Área 8B, 9  e 11) NEC", "contratadaCurta": "Start Engenharia", "longitude": -46.529457871321, "latitude": -23.6435418894365, "local": "Coordenada georreferenciada", "responsavel": "Técnico Enel Gilmar Campos", "risco": "Validar APR, sinalização, EPI/EPC, bloqueios e condições do local antes da execução.", "proxima": "Acompanhar execução, registrar evidências e atualizar status da obra."}, {"id": 45, "projeto": "DAC/A.LES.25.00797", "familia": "DAC", "descricao": "Ligação Nova", "data": "23/05/2026", "status": "Liberado para Execução", "tipo": "FI", "poweron": "16169553", "equipamentos": "010ET220628", "inicio": "10:00", "fim": "14:00", "contratada": "Start Engenharia (Área 8B, 9  e 11) NEC", "contratadaCurta": "Start Engenharia", "longitude": -46.5366054041032, "latitude": -23.6544013495359, "local": "Coordenada georreferenciada", "responsavel": "Técnico Enel Gilmar Campos", "risco": "Validar APR, sinalização, EPI/EPC, bloqueios e condições do local antes da execução.", "proxima": "Acompanhar execução, registrar evidências e atualizar status da obra."}, {"id": 46, "projeto": "DMP/A.LES.20.06310", "familia": "DMP", "descricao": "Reforma de Rede Secundária", "data": "23/05/2026", "status": "Liberado para Execução", "tipo": "OLVR", "poweron": "Não informado", "equipamentos": "353ET052968", "inicio": "08:00", "fim": "16:30", "contratada": "Engelmig (Área 11) NEC e UPS", "contratadaCurta": "Engelmig", "longitude": -46.5143747931887, "latitude": -23.5506293318783, "local": "Coordenada georreferenciada", "responsavel": "Técnico Enel Gilmar Campos", "risco": "Validar APR, sinalização, EPI/EPC, bloqueios e condições do local antes da execução.", "proxima": "Acompanhar execução, registrar evidências e atualizar status da obra."}, {"id": 47, "projeto": "DMP/A.LES.22.06199", "familia": "DMP", "descricao": "Reforma de Rede Secundária", "data": "23/05/2026", "status": "Liberado para Execução", "tipo": "OLVR", "poweron": "Não informado", "equipamentos": "353ET029357", "inicio": "08:00", "fim": "16:30", "contratada": "Engelmig (Área 11) NEC e UPS", "contratadaCurta": "Engelmig", "longitude": -46.5717790069112, "latitude": -23.536364079567, "local": "Coordenada georreferenciada", "responsavel": "Técnico Enel Gilmar Campos", "risco": "Validar APR, sinalização, EPI/EPC, bloqueios e condições do local antes da execução.", "proxima": "Acompanhar execução, registrar evidências e atualizar status da obra."}, {"id": 48, "projeto": "DMP/A.LES.25.05800", "familia": "DMP", "descricao": "Reforma de Rede Secundaria RTRI", "data": "23/05/2026", "status": "Liberado para Execução", "tipo": "FI", "poweron": "16170452", "equipamentos": "356ET038995", "inicio": "10:00", "fim": "14:00", "contratada": "Start Engenharia (Área 8B, 9  e 11) NEC", "contratadaCurta": "Start Engenharia", "longitude": -46.4917755240197, "latitude": -23.5822512958677, "local": "Coordenada georreferenciada", "responsavel": "Técnico Enel Gilmar Campos", "risco": "Validar APR, sinalização, EPI/EPC, bloqueios e condições do local antes da execução.", "proxima": "Acompanhar execução, registrar evidências e atualizar status da obra."}, {"id": 49, "projeto": "DAC/A.LES.25.00109", "familia": "DAC", "descricao": "Alteração de Carga", "data": "23/05/2026", "status": "Liberado para Execução", "tipo": "FI", "poweron": "16170476", "equipamentos": "353ET014685", "inicio": "09:30", "fim": "12:30", "contratada": "Engelmig (Área 11) NEC e UPS", "contratadaCurta": "Engelmig", "longitude": -46.5488917163131, "latitude": -23.5278747866586, "local": "Coordenada georreferenciada", "responsavel": "Técnico Enel Gilmar Campos", "risco": "Validar APR, sinalização, EPI/EPC, bloqueios e condições do local antes da execução.", "proxima": "Acompanhar execução, registrar evidências e atualizar status da obra."}, {"id": 50, "projeto": "DAC/A.LES.24.00910", "familia": "DAC", "descricao": "Ligação Nova", "data": "23/05/2026", "status": "Liberado para Documentação", "tipo": "FI", "poweron": "Não informado", "equipamentos": "353ET029621", "inicio": "10:00", "fim": "14:00", "contratada": "Start Engenharia (Área 8B, 9  e 11) NEC", "contratadaCurta": "Start Engenharia", "longitude": -46.4922155540993, "latitude": -23.5369512238966, "local": "Coordenada georreferenciada", "responsavel": "Técnico Enel Gilmar Campos", "risco": "Validar APR, sinalização, EPI/EPC, bloqueios e condições do local antes da execução.", "proxima": "Acompanhar execução, registrar evidências e atualizar status da obra."}, {"id": 51, "projeto": "DAC/A.LES.25.00703", "familia": "DAC", "descricao": "Remoção de Poste", "data": "25/05/2026", "status": "Liberado para Execução", "tipo": "FI", "poweron": "16178484", "equipamentos": "010ET229477", "inicio": "14:00", "fim": "16:00", "contratada": "Start Engenharia (Área 8B, 9  e 11) NEC", "contratadaCurta": "Start Engenharia", "longitude": -46.4823465930684, "latitude": -23.6797157591265, "local": "Coordenada georreferenciada", "responsavel": "Técnico Enel Gilmar Campos", "risco": "Validar APR, sinalização, EPI/EPC, bloqueios e condições do local antes da execução.", "proxima": "Acompanhar execução, registrar evidências e atualizar status da obra."}, {"id": 52, "projeto": "DMP/A.LES.22.05524", "familia": "DMP", "descricao": "Reforma de Rede Secundária", "data": "25/05/2026", "status": "Liberado para Execução", "tipo": "FI", "poweron": "16170780", "equipamentos": "352ET073772", "inicio": "09:30", "fim": "12:30", "contratada": "Engelmig (Área 11) NEC e UPS", "contratadaCurta": "Engelmig", "longitude": -46.391169126889, "latitude": -23.5117493826622, "local": "Coordenada georreferenciada", "responsavel": "Técnico Enel Gilmar Campos", "risco": "Validar APR, sinalização, EPI/EPC, bloqueios e condições do local antes da execução.", "proxima": "Acompanhar execução, registrar evidências e atualizar status da obra."}, {"id": 53, "projeto": "DMP/A.LES.21.28198", "familia": "DMP", "descricao": "Reforma de Rede Secundária", "data": "25/05/2026", "status": "Liberado para Execução", "tipo": "OLVR", "poweron": "Não informado", "equipamentos": "352ET032397", "inicio": "08:00", "fim": "16:30", "contratada": "Engelmig (Área 11) NEC e UPS", "contratadaCurta": "Engelmig", "longitude": -46.3900806724785, "latitude": -23.5075472990191, "local": "Coordenada georreferenciada", "responsavel": "Técnico Enel Gilmar Campos", "risco": "Validar APR, sinalização, EPI/EPC, bloqueios e condições do local antes da execução.", "proxima": "Acompanhar execução, registrar evidências e atualizar status da obra."}, {"id": 54, "projeto": "DMP/A.LES.20.06242", "familia": "DMP", "descricao": "Reforma de Rede Secundária", "data": "25/05/2026", "status": "Liberado para Execução", "tipo": "OLVR", "poweron": "Não informado", "equipamentos": "352ET055378", "inicio": "08:00", "fim": "16:30", "contratada": "Engelmig (Área 11) NEC e UPS", "contratadaCurta": "Engelmig", "longitude": -46.3750869907994, "latitude": -23.4927281855108, "local": "Coordenada georreferenciada", "responsavel": "Técnico Enel Gilmar Campos", "risco": "Validar APR, sinalização, EPI/EPC, bloqueios e condições do local antes da execução.", "proxima": "Acompanhar execução, registrar evidências e atualizar status da obra."}, {"id": 55, "projeto": "DMP/A.LES.25.04887", "familia": "DMP", "descricao": "Reforma de Rede Secundaria RTRI", "data": "25/05/2026", "status": "Liberado para Execução", "tipo": "FI", "poweron": "16171013", "equipamentos": "356ET005108", "inicio": "10:00", "fim": "14:00", "contratada": "Engelmig (Área 11) NEC e UPS", "contratadaCurta": "Engelmig", "longitude": -46.4556245887762, "latitude": -23.5257360598735, "local": "Coordenada georreferenciada", "responsavel": "Técnico Enel Gilmar Campos", "risco": "Validar APR, sinalização, EPI/EPC, bloqueios e condições do local antes da execução.", "proxima": "Acompanhar execução, registrar evidências e atualizar status da obra."}, {"id": 56, "projeto": "DMP/A.LES.24.05583", "familia": "DMP", "descricao": "Reforma de Rede Secundaria RTRI", "data": "25/05/2026", "status": "Liberado para Execução", "tipo": "FI", "poweron": "16170595", "equipamentos": "015ET003629", "inicio": "08:30", "fim": "11:00", "contratada": "Engelmig (Área 11) NEC e UPS", "contratadaCurta": "Engelmig", "longitude": -46.4230873069374, "latitude": -23.668893776122, "local": "Coordenada georreferenciada", "responsavel": "Técnico Enel Gilmar Campos", "risco": "Validar APR, sinalização, EPI/EPC, bloqueios e condições do local antes da execução.", "proxima": "Acompanhar execução, registrar evidências e atualizar status da obra."}, {"id": 57, "projeto": "DMP/A.LES.24.01909", "familia": "DMP", "descricao": "Reforma de Rede Secundaria RTRI", "data": "25/05/2026", "status": "Liberado para Execução", "tipo": "FI", "poweron": "16170519", "equipamentos": "010ET034195", "inicio": "12:30", "fim": "15:30", "contratada": "Engelmig (Área 11) NEC e UPS", "contratadaCurta": "Engelmig", "longitude": -46.5257192445865, "latitude": -23.6409274545918, "local": "Coordenada georreferenciada", "responsavel": "Técnico Enel Gilmar Campos", "risco": "Validar APR, sinalização, EPI/EPC, bloqueios e condições do local antes da execução.", "proxima": "Acompanhar execução, registrar evidências e atualizar status da obra."}, {"id": 58, "projeto": "DMP/A.LES.21.28265", "familia": "DMP", "descricao": "Reforma de Rede Secundária", "data": "25/05/2026", "status": "Liberado para Execução", "tipo": "FI", "poweron": "16170845", "equipamentos": "352ET058518", "inicio": "10:00", "fim": "12:00", "contratada": "Engelmig (Área 11) NEC e UPS", "contratadaCurta": "Engelmig", "longitude": -46.4161027235292, "latitude": -23.4796903172671, "local": "Coordenada georreferenciada", "responsavel": "Técnico Enel Gilmar Campos", "risco": "Validar APR, sinalização, EPI/EPC, bloqueios e condições do local antes da execução.", "proxima": "Acompanhar execução, registrar evidências e atualizar status da obra."}, {"id": 59, "projeto": "DMP/A.LES.21.28225", "familia": "DMP", "descricao": "Reforma de Rede Secundária", "data": "25/05/2026", "status": "Liberado para Execução", "tipo": "OLVR", "poweron": "Não informado", "equipamentos": "356ET161667", "inicio": "08:30", "fim": "16:30", "contratada": "Engelmig (Área 11) NEC e UPS", "contratadaCurta": "Engelmig", "longitude": -46.4725247854146, "latitude": -23.5640482738828, "local": "Coordenada georreferenciada", "responsavel": "Técnico Enel Gilmar Campos", "risco": "Validar APR, sinalização, EPI/EPC, bloqueios e condições do local antes da execução.", "proxima": "Acompanhar execução, registrar evidências e atualizar status da obra."}, {"id": 60, "projeto": "DMP/A.LES.22.01002", "familia": "DMP", "descricao": "Reforma de Rede Secundária", "data": "25/05/2026", "status": "Liberado para Execução", "tipo": "OLVR", "poweron": "Não informado", "equipamentos": "356ET029453", "inicio": "08:30", "fim": "16:30", "contratada": "Engelmig (Área 11) NEC e UPS", "contratadaCurta": "Engelmig", "longitude": -46.4230355151535, "latitude": -23.6153712025164, "local": "Coordenada georreferenciada", "responsavel": "Técnico Enel Gilmar Campos", "risco": "Validar APR, sinalização, EPI/EPC, bloqueios e condições do local antes da execução.", "proxima": "Acompanhar execução, registrar evidências e atualizar status da obra."}, {"id": 61, "projeto": "DAC/A.LES.25.00838", "familia": "DAC", "descricao": "Alteração de Carga", "data": "25/05/2026", "status": "Liberado para Execução", "tipo": "FI", "poweron": "16178993", "equipamentos": "015ET221067", "inicio": "14:00", "fim": "17:00", "contratada": "Start Engenharia (Área 8B, 9  e 11) NEC", "contratadaCurta": "Start Engenharia", "longitude": -46.4489672817882, "latitude": -23.6757998794377, "local": "Coordenada georreferenciada", "responsavel": "Técnico Enel Gilmar Campos", "risco": "Validar APR, sinalização, EPI/EPC, bloqueios e condições do local antes da execução.", "proxima": "Acompanhar execução, registrar evidências e atualizar status da obra."}, {"id": 62, "projeto": "DAC/A.ABC.26.00021", "familia": "DAC", "descricao": "Ligação Nova", "data": "25/05/2026", "status": "Liberado para Execução", "tipo": "FI", "poweron": "16170590", "equipamentos": "020ET088807", "inicio": "10:00", "fim": "13:00", "contratada": "Start Engenharia (Área 8B, 9  e 11) NEC", "contratadaCurta": "Start Engenharia", "longitude": -46.4161784263815, "latitude": -23.7693276933029, "local": "Coordenada georreferenciada", "responsavel": "Técnico Enel Gilmar Campos", "risco": "Validar APR, sinalização, EPI/EPC, bloqueios e condições do local antes da execução.", "proxima": "Acompanhar execução, registrar evidências e atualizar status da obra."}, {"id": 63, "projeto": "DAC/A.LES.25.00715", "familia": "DAC", "descricao": "Ligação Provisória", "data": "25/05/2026", "status": "Liberado para Execução", "tipo": "FI", "poweron": "16179061", "equipamentos": "356ET006973", "inicio": "09:00", "fim": "13:00", "contratada": "Start Engenharia (Área 8B, 9  e 11) NEC", "contratadaCurta": "Start Engenharia", "longitude": -46.4436093478508, "latitude": -23.5411914142455, "local": "Coordenada georreferenciada", "responsavel": "Técnico Enel Gilmar Campos", "risco": "Validar APR, sinalização, EPI/EPC, bloqueios e condições do local antes da execução.", "proxima": "Acompanhar execução, registrar evidências e atualizar status da obra."}, {"id": 64, "projeto": "DAC/A.LES.25.00958", "familia": "DAC", "descricao": "Ligação Nova", "data": "25/05/2026", "status": "Liberado para Execução", "tipo": "FI", "poweron": "16179570", "equipamentos": "356ET167647", "inicio": "10:00", "fim": "14:00", "contratada": "Start Engenharia (Área 8B, 9  e 11) NEC", "contratadaCurta": "Start Engenharia", "longitude": -46.4056122617708, "latitude": -23.5335561977065, "local": "Coordenada georreferenciada", "responsavel": "Técnico Enel Gilmar Campos", "risco": "Validar APR, sinalização, EPI/EPC, bloqueios e condições do local antes da execução.", "proxima": "Acompanhar execução, registrar evidências e atualizar status da obra."}, {"id": 65, "projeto": "DAC/A.LES.26.00406", "familia": "DAC", "descricao": "Ligação Nova", "data": "25/05/2026", "status": "Liberado para Execução", "tipo": "FI", "poweron": "16178764", "equipamentos": "020BF025865", "inicio": "10:00", "fim": "14:00", "contratada": "Start Engenharia (Área 8B, 9  e 11) NEC", "contratadaCurta": "Start Engenharia", "longitude": -46.3818843904952, "latitude": -23.689443554704, "local": "Coordenada georreferenciada", "responsavel": "Técnico Enel Gilmar Campos", "risco": "Validar APR, sinalização, EPI/EPC, bloqueios e condições do local antes da execução.", "proxima": "Acompanhar execução, registrar evidências e atualizar status da obra."}, {"id": 66, "projeto": "DAC/A.LES.25.00177", "familia": "DAC", "descricao": "Alteração de Carga", "data": "25/05/2026", "status": "Liberado para Documentação", "tipo": "BRA", "poweron": "Não informado", "equipamentos": "356ET093049", "inicio": "09:00", "fim": "17:00", "contratada": "Conecta Obras Extras (Área 8B, 9 e 11) NEC", "contratadaCurta": "Conecta Obras Extras", "longitude": -46.40937237873, "latitude": -23.5905434665353, "local": "Coordenada georreferenciada", "responsavel": "Técnico Enel Gilmar Campos", "risco": "Validar APR, sinalização, EPI/EPC, bloqueios e condições do local antes da execução.", "proxima": "Acompanhar execução, registrar evidências e atualizar status da obra."}, {"id": 67, "projeto": "DAC/A.LES.25.00981", "familia": "DAC", "descricao": "Ligação Nova", "data": "25/05/2026", "status": "Liberado para Execução", "tipo": "OLVR", "poweron": "Não informado", "equipamentos": "010ET220725", "inicio": "10:00", "fim": "14:00", "contratada": "Start Engenharia (Área 8B, 9  e 11) NEC", "contratadaCurta": "Start Engenharia", "longitude": -46.5096866792029, "latitude": -23.7134068983585, "local": "Coordenada georreferenciada", "responsavel": "Técnico Enel Gilmar Campos", "risco": "Validar APR, sinalização, EPI/EPC, bloqueios e condições do local antes da execução.", "proxima": "Acompanhar execução, registrar evidências e atualizar status da obra."}, {"id": 68, "projeto": "DAC/A.LES.25.01249", "familia": "DAC", "descricao": "Ligação Nova", "data": "25/05/2026", "status": "Liberado para Execução", "tipo": "FI", "poweron": "16187207", "equipamentos": "352BF058580", "inicio": "10:00", "fim": "14:00", "contratada": "Conecta Obras Extras (Área 8B, 9 e 11) NEC", "contratadaCurta": "Conecta Obras Extras", "longitude": -46.5132523033948, "latitude": -23.515192787827, "local": "Coordenada georreferenciada", "responsavel": "Técnico Enel Gilmar Campos", "risco": "Validar APR, sinalização, EPI/EPC, bloqueios e condições do local antes da execução.", "proxima": "Acompanhar execução, registrar evidências e atualizar status da obra."}, {"id": 69, "projeto": "DAC/A.LES.25.01283", "familia": "DAC", "descricao": "Ligação Nova", "data": "25/05/2026", "status": "Liberado para Execução", "tipo": "FI", "poweron": "16187207", "equipamentos": "352BF058580", "inicio": "10:00", "fim": "14:00", "contratada": "Conecta Obras Extras (Área 8B, 9 e 11) NEC", "contratadaCurta": "Conecta Obras Extras", "longitude": -46.5132523033948, "latitude": -23.515192787827, "local": "Coordenada georreferenciada", "responsavel": "Técnico Enel Gilmar Campos", "risco": "Validar APR, sinalização, EPI/EPC, bloqueios e condições do local antes da execução.", "proxima": "Acompanhar execução, registrar evidências e atualizar status da obra."}];
+    const totalBase = dados.length;
+    const $ = id => document.getElementById(id);
+    let map, layerGroup;
+
+    function escapeHtml(value) {
+      return String(value ?? "").replace(/[&<>"']/g, s => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[s]));
+    }
+
+    function unique(field) {
+      return [...new Set(dados.map(d => d[field]).filter(Boolean))]
+        .sort((a,b) => String(a).localeCompare(String(b), "pt-BR"));
+    }
+
+    function popularSelect(id, field) {
+      const select = $(id);
+      unique(field).forEach(v => {
+        const opt = document.createElement("option");
+        opt.value = v;
+        opt.textContent = v;
+        select.appendChild(opt);
+      });
+    }
+
+    function badgeStatus(status) {
+      const s = String(status || "").toLowerCase();
+      if (s.includes("execução")) return "exec";
+      if (s.includes("documentação")) return "doc";
+      if (s.includes("pendente") || s.includes("não")) return "pendente";
+      return "prog";
+    }
+
+    function corContratada(c) {
+      const n = String(c || "").toLowerCase();
+      if (n.includes("start")) return "#0555FA";
+      if (n.includes("engelmig")) return "#008556";
+      if (n.includes("conecta")) return "#D64200";
+      return "#EB0052";
+    }
+
+    function filtrar() {
+      const q = $("q").value.toLowerCase().trim();
+      const contratada = $("contratada").value;
+      const data = $("data").value;
+      const status = $("status").value;
+      const tipo = $("tipo").value;
+      const familia = $("familia").value;
+
+      return dados.filter(d => {
+        const texto = Object.values(d).join(" ").toLowerCase();
+        return (!q || texto.includes(q)) &&
+          (!contratada || d.contratadaCurta === contratada) &&
+          (!data || d.data === data) &&
+          (!status || d.status === status) &&
+          (!tipo || d.tipo === tipo) &&
+          (!familia || d.familia === familia);
+      });
+    }
+
+    function renderTabela(lista) {
+      $("tbody").innerHTML = lista.map((d, i) => `
+        <tr>
+          <td>${i + 1}</td>
+          <td><strong>${escapeHtml(d.projeto)}</strong></td>
+          <td>${escapeHtml(d.familia)}</td>
+          <td>${escapeHtml(d.descricao)}</td>
+          <td>${escapeHtml(d.data)}</td>
+          <td><span class="badge ${badgeStatus(d.status)}">${escapeHtml(d.status)}</span></td>
+          <td>${escapeHtml(d.tipo)}</td>
+          <td>${escapeHtml(d.poweron)}</td>
+          <td>${escapeHtml(d.equipamentos)}</td>
+          <td>${escapeHtml(d.inicio)}</td>
+          <td>${escapeHtml(d.fim)}</td>
+          <td>${escapeHtml(d.contratada)}</td>
+          <td>${escapeHtml(d.responsavel)}</td>
+          <td>${d.longitude ?? "Não encontrado"}</td>
+          <td>${d.latitude ?? "Não encontrado"}</td>
+        </tr>
+      `).join("");
+    }
+
+    function renderCards(lista) {
+      $("obraCards").innerHTML = lista.map(d => `
+        <article class="obra-card">
+          <div>
+            <h3>${escapeHtml(d.projeto)}</h3>
+            <span class="badge ${badgeStatus(d.status)}">${escapeHtml(d.status)}</span>
+          </div>
+          <small><strong>Descrição:</strong> ${escapeHtml(d.descricao)}</small>
+          <small><strong>Contratada:</strong> ${escapeHtml(d.contratada)}</small>
+          <small><strong>Tipo:</strong> ${escapeHtml(d.tipo)} | <strong>PowerON:</strong> ${escapeHtml(d.poweron)}</small>
+          <small><strong>Equipamento:</strong> ${escapeHtml(d.equipamentos)}</small>
+          <small><strong>Ponto de atenção:</strong> ${escapeHtml(d.risco)}</small>
+          <small><strong>Próxima ação:</strong> ${escapeHtml(d.proxima)}</small>
+          <div class="obra-line">
+            <span><strong>Data:</strong> ${escapeHtml(d.data)}</span>
+            <span><strong>Horário:</strong> ${escapeHtml(d.inicio)} às ${escapeHtml(d.fim)}</span>
+          </div>
+        </article>
+      `).join("") || `<div class="notice">Nenhuma obra encontrada com os filtros selecionados.</div>`;
+    }
+
+    function renderMapa(lista) {
+      layerGroup.clearLayers();
+      const pontos = lista.filter(d => Number.isFinite(d.latitude) && Number.isFinite(d.longitude));
+      pontos.forEach(d => {
+        const marker = L.circleMarker([d.latitude, d.longitude], {
+          radius: 8, color: "#fff", weight: 2, fillColor: corContratada(d.contratadaCurta), fillOpacity: .92
+        });
+        marker.bindPopup(`
+          <strong>${escapeHtml(d.projeto)}</strong><br>
+          ${escapeHtml(d.descricao)}<br><br>
+          <strong>Data:</strong> ${escapeHtml(d.data)}<br>
+          <strong>Status:</strong> ${escapeHtml(d.status)}<br>
+          <strong>Tipo:</strong> ${escapeHtml(d.tipo)}<br>
+          <strong>PowerON:</strong> ${escapeHtml(d.poweron)}<br>
+          <strong>Equipamentos:</strong> ${escapeHtml(d.equipamentos)}<br>
+          <strong>Horário:</strong> ${escapeHtml(d.inicio)} às ${escapeHtml(d.fim)}<br>
+          <strong>Contratada:</strong> ${escapeHtml(d.contratada)}<br>
+          <strong>Responsável:</strong> ${escapeHtml(d.responsavel)}
+        `);
+        marker.addTo(layerGroup);
+      });
+      if (pontos.length) {
+        map.fitBounds(L.latLngBounds(pontos.map(p => [p.latitude, p.longitude])).pad(.18));
+      } else {
+        map.setView([-23.55, -46.56], 11);
+      }
+    }
+
+    function contar(lista, field) {
+      return lista.reduce((acc, item) => {
+        const key = item[field] || "Não informado";
+        acc[key] = (acc[key] || 0) + 1;
+        return acc;
+      }, {});
+    }
+
+    function renderChart(id, lista, field) {
+      const entries = Object.entries(contar(lista, field)).sort((a,b) => b[1] - a[1]);
+      const max = Math.max(...entries.map(e => e[1]), 1);
+      $(id).innerHTML = entries.map(([label, value]) => `
+        <div class="bar-row">
+          <span title="${escapeHtml(label)}">${escapeHtml(label)}</span>
+          <div class="bar"><i style="width:${(value / max) * 100}%"></i></div>
+          <b>${value}</b>
+        </div>
+      `).join("") || `<p>Nenhum registro visível.</p>`;
+    }
+
+    function atualizar() {
+      const lista = filtrar();
+      $("contador").textContent = `${lista.length} de ${totalBase} registros visíveis`;
+      renderTabela(lista);
+      renderCards(lista);
+      renderMapa(lista);
+      renderChart("chartContratada", lista, "contratadaCurta");
+      renderChart("chartData", lista, "data");
+      renderChart("chartTipo", lista, "tipo");
+      renderChart("chartStatus", lista, "status");
+    }
+
+    function limparFiltros() {
+      ["q","contratada","data","status","tipo","familia"].forEach(id => $(id).value = "");
+      atualizar();
+    }
+
+    function exportarCSV() {
+      const lista = filtrar();
+      const headers = ["Projeto","Família","Descrição","Data","Status","Tipo","PowerON","Equipamentos","Início","Fim","Contratada","Responsável","Longitude","Latitude"];
+      const rows = lista.map(d => [d.projeto,d.familia,d.descricao,d.data,d.status,d.tipo,d.poweron,d.equipamentos,d.inicio,d.fim,d.contratada,d.responsavel,d.longitude ?? "Não encontrado",d.latitude ?? "Não encontrado"]);
+      const csv = [headers, ...rows].map(r => r.map(v => `"${String(v).replaceAll('"','""')}"`).join(";")).join("\n");
+      const blob = new Blob(["\ufeff" + csv], {type:"text/csv;charset=utf-8"});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "obras_mv_leste_norte_18_25_maio_2026.csv";
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function iniciar() {
+      $("acesso").textContent = new Intl.DateTimeFormat("pt-BR", {dateStyle:"full", timeStyle:"short"}).format(new Date());
+      popularSelect("contratada", "contratadaCurta");
+      popularSelect("data", "data");
+      popularSelect("status", "status");
+      popularSelect("tipo", "tipo");
+      popularSelect("familia", "familia");
+
+      map = L.map("map", { scrollWheelZoom:false }).setView([-23.55, -46.56], 11);
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom:19,
+        attribution:"&copy; OpenStreetMap"
+      }).addTo(map);
+      layerGroup = L.layerGroup().addTo(map);
+
+      ["q","contratada","data","status","tipo","familia"].forEach(id => {
+        $(id).addEventListener("input", atualizar);
+        $(id).addEventListener("change", atualizar);
+      });
+      atualizar();
+    }
+
+    iniciar();
+  </script>
+</body>
+</html>
