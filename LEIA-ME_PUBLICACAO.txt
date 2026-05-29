@@ -1,0 +1,22 @@
+SITE DE OBRAS MV LESTE / NORTE
+Período: 27/05/2026 a 06/06/2026
+Base analisada: Programação_27_05_07_junho.xlsx
+Registros carregados: 253
+Registros com coordenadas: 0
+Registros sem coordenadas: 253
+Parceiras/contratadas identificadas: 7
+Tipos de intervenção: 4
+
+Arquivos da pasta:
+- index.html: site atualizado pronto para publicação.
+- programacao_27_05_06_junho_2026.csv: base exportada em CSV para conferência.
+- Programação_27_05_07_junho.xlsx: planilha original utilizada como fonte.
+
+Como publicar no GitHub Pages:
+1. Acesse o repositório no GitHub.
+2. Envie todos os arquivos desta pasta para a raiz do repositório.
+3. Mantenha o arquivo principal com o nome index.html.
+4. Em Settings > Pages, selecione a branch principal e a pasta /root.
+5. Aguarde o GitHub gerar o link de publicação.
+
+Observação: a planilha enviada não contém latitude/longitude. Por isso, o mapa foi mantido no modelo do site, porém sem marcadores. Para habilitar o mapa, inclua colunas de latitude e longitude na base e atualize o arquivo.
